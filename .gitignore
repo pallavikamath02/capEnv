@@ -1,0 +1,8 @@
+capenv
+__pycache__/
+*.pyc
+instance
+.env
+.pytest_cache/
+.coverage
+migrations/
