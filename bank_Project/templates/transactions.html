@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card section-card">
+            <div class="card-header bg-warning text-dark">Transactions</div>
+            <div class="card-body">
+                <h5>Perform Transaction</h5>
+                <form id="transactionForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-2"><input type="text" class="form-control" id="transId" placeholder="Transaction ID" required></div>
+                        <div class="col-md-6 mb-2"><input type="text" class="form-control" id="transAccNum" placeholder="Account Number" required></div>
+                        <div class="col-md-6 mb-2">
+                            <select class="form-select" id="transType">
+                                <option value="Deposit">Deposit</option>
+                                <option value="Withdraw">Withdraw</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-2"><input type="number" class="form-control" id="transAmount" placeholder="Amount" required></div>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">Submit Transaction</button>
+                </form>
+                <hr>
+                <h5>History <button class="btn btn-sm btn-outline-secondary float-end" onclick="loadTransactions()">Refresh</button></h5>
+                <div class="scrollable-table">
+                    <ul class="list-group" id="transactionList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            transaction_id: document.getElementById('transId').value,
+            account_number: document.getElementById('transAccNum').value,
+            transaction_type: document.getElementById('transType').value,
+            amount: parseFloat(document.getElementById('transAmount').value)
+        };
+        try {
+            const res = await fetch('/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            alert(result.message || result.error);
+            if(res.ok) {
+                document.getElementById('transactionForm').reset();
+                loadTransactions();
+            }
+        } catch(err) { alert('Error: ' + err); }
+    });
+
+    async function loadTransactions() {
+        const list = document.getElementById('transactionList');
+        list.innerHTML = 'Loading...';
+        try {
+            const res = await fetch('/transactions');
+            const data = await res.json();
+            list.innerHTML = '';
+            if (data.length === 0) list.innerHTML = '<li class="list-group-item">No transactions found.</li>';
+            data.forEach(t => {
+                list.innerHTML += `<li class="list-group-item">
+                    <strong>${t.transaction_type}</strong> of $${t.amount}<br>
+                    Acc: ${t.account_number} | ID: ${t.transaction_id}<br>
+                    <small>${t.date}</small>
+                </li>`;
+            });
+        } catch(err) { list.innerHTML = 'Error loading data'; }
+    }
+
+    // Initial Load
+    loadTransactions();
+</script>
+{% endblock %}

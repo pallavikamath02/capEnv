@@ -1,9 +1,25 @@
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, render_template
 from flasgger import Swagger
 import datetime
 
 app = Flask(__name__)
 swagger = Swagger(app)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/ui/customers')
+def ui_customers():
+    return render_template('customers.html')
+
+@app.route('/ui/accounts')
+def ui_accounts():
+    return render_template('accounts.html')
+
+@app.route('/ui/transactions')
+def ui_transactions():
+    return render_template('transactions.html')
 
 @app.route('/swagger-ui')
 def swagger_ui_redirect():

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card section-card">
+            <div class="card-header bg-success text-white">Accounts</div>
+            <div class="card-body">
+                <h5>Create Account</h5>
+                <form id="accountForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-2"><input type="text" class="form-control" id="accNum" placeholder="Account Number" required></div>
+                        <div class="col-md-6 mb-2"><input type="text" class="form-control" id="accCustId" placeholder="Customer ID" required></div>
+                        <div class="col-md-6 mb-2">
+                            <select class="form-select" id="accType">
+                                <option value="Savings">Savings</option>
+                                <option value="Current">Current</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-2"><input type="number" class="form-control" id="accBalance" placeholder="Initial Balance" value="0"></div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Create Account</button>
+                </form>
+                <hr>
+                <h5>All Accounts <button class="btn btn-sm btn-outline-secondary float-end" onclick="loadAccounts()">Refresh</button></h5>
+                <div class="scrollable-table">
+                    <ul class="list-group" id="accountList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('accountForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            account_number: document.getElementById('accNum').value,
+            customer_id: document.getElementById('accCustId').value,
+            account_type: document.getElementById('accType').value,
+            balance: parseFloat(document.getElementById('accBalance').value)
+        };
+        try {
+            const res = await fetch('/accounts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            alert(result.message || result.error);
+            if(res.ok) {
+                document.getElementById('accountForm').reset();
+                loadAccounts();
+            }
+        } catch(err) { alert('Error: ' + err); }
+    });
+
+    async function loadAccounts() {
+        const list = document.getElementById('accountList');
+        list.innerHTML = 'Loading...';
+        try {
+            const res = await fetch('/accounts');
+            const data = await res.json();
+            list.innerHTML = '';
+            if (data.length === 0) list.innerHTML = '<li class="list-group-item">No accounts found.</li>';
+            data.forEach(a => {
+                list.innerHTML += `<li class="list-group-item">
+                    <strong>Acc: ${a.account_number}</strong> (${a.account_type})<br>
+                    Customer: ${a.customer_id}<br>
+                    Balance: $${a.balance}
+                </li>`;
+            });
+        } catch(err) { list.innerHTML = 'Error loading data'; }
+    }
+
+    // Initial Load
+    loadAccounts();
+</script>
+{% endblock %}
